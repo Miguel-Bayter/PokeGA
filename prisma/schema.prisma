@@ -1,0 +1,142 @@
+// Prisma Schema for Pokemon Champions Competitive Platform
+// https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// User model for authentication
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  username      String    @unique
+  displayName   String?
+  image         String?
+  provider      String    // github, google
+  providerId    String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  teams         Team[]
+  votes         Vote[]
+
+  @@map("users")
+}
+
+// Pokemon model (186 Champions roster)
+model Pokemon {
+  id            Int       @id // PokeAPI ID
+  name          String    @unique
+  types         String    // Comma-separated types (e.g., "fire,flying")
+  baseStats     String    // JSON string: {hp, atk, def, spAtk, spDef, spd}
+  abilities     String    // Comma-separated abilities
+  isMega        Boolean   @default(false)
+  megaStone     String?   // Item name for mega stone
+  generation    Int
+  spriteUrl     String?
+  createdAt     DateTime  @default(now())
+  teamMembers   TeamMember[]
+
+  @@map("pokemon")
+}
+
+// Move model
+model Move {
+  id            Int       @id // PokeAPI ID
+  name          String    @unique
+  type          String
+  category      String    // physical, special, status
+  power         Int?
+  accuracy      Int?
+  pp            Int?
+  priority      Int       @default(0)
+  effect        String?
+  shortEffect   String?
+  createdAt     DateTime  @default(now())
+
+  @@map("moves")
+}
+
+// Item model
+model Item {
+  id            Int       @id // PokeAPI ID
+  name          String    @unique
+  category      String
+  description   String?
+  effect        String?
+  createdAt     DateTime  @default(now())
+  teamMembers   TeamMember[]
+
+  @@map("items")
+}
+
+// Ability model
+model Ability {
+  id            Int       @id // PokeAPI ID
+  name          String    @unique
+  effect        String?
+  shortEffect   String?
+  createdAt     DateTime  @default(now())
+
+  @@map("abilities")
+}
+
+// Team model
+model Team {
+  id            String    @id @default(cuid())
+  name          String
+  description   String?
+  format        String    @default("champions-doubles")
+  isPublic      Boolean   @default(false)
+  score         Float?    // Computed team score
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  members       TeamMember[]
+  votes         Vote[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([isPublic, score])
+  @@map("teams")
+}
+
+// TeamMember model (individual Pokemon in a team)
+model TeamMember {
+  id            String    @id @default(cuid())
+  teamId        String
+  team          Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  pokemonId     Int
+  pokemon       Pokemon   @relation(fields: [pokemonId], references: [id])
+  itemId        Int?
+  item          Item?     @relation(fields: [itemId], references: [id])
+  abilityName   String
+  nature        String
+  statPoints    String    // JSON: {hp, atk, def, spAtk, spDef, spd} - max 66 total
+  moves         String    // JSON array of move names (max 4)
+  isMega        Boolean   @default(false)
+  teraType      String?
+  position      Int       // Slot position 0-5
+
+  @@unique([teamId, position])
+  @@index([teamId])
+  @@map("team_members")
+}
+
+// Vote model for community voting
+model Vote {
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  teamId        String
+  team          Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  value         Int       // 1 = upvote, -1 = downvote
+  createdAt     DateTime  @default(now())
+
+  @@unique([userId, teamId])
+  @@index([teamId])
+  @@map("votes")
+}
