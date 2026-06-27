@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { POKEMON_TYPES, type PokemonType } from '@/lib/type-chart';
 import { useTeamBuilderStore } from '@/stores/team-builder.store';
+import { MegaSelector } from '@/components/features/builder/mega-selector';
+import { TeraSelector } from '@/components/features/builder/tera-selector';
 import {
   getItemsAction,
   getMovesAction,
@@ -171,43 +172,13 @@ export function SetEditor() {
               ))}
             </select>
           </div>
-
-          <div className="form-control">
-            <label className="label" htmlFor="tera-select">
-              <span className="label-text">Tera Type</span>
-            </label>
-            <select
-              id="tera-select"
-              className="select select-bordered w-full"
-              value={member.teraType ?? ''}
-              onChange={(e) =>
-                updateMemberField(
-                  activeSlotIndex,
-                  'teraType',
-                  e.target.value ? (e.target.value as PokemonType) : null
-                )
-              }
-            >
-              <option value="">No Tera Type</option>
-              {POKEMON_TYPES.map((type) => (
-                <option key={type} value={type}>
-                  {type}
-                </option>
-              ))}
-            </select>
-          </div>
         </div>
 
-        <div className="form-control mt-2">
-          <label className="label cursor-pointer justify-start gap-2">
-            <input
-              type="checkbox"
-              className="toggle toggle-primary"
-              checked={member.isMega}
-              onChange={(e) => updateMemberField(activeSlotIndex, 'isMega', e.target.checked)}
-            />
-            <span className="label-text">Mega Evolution</span>
-          </label>
+        <div className="divider">Mega & Tera</div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <MegaSelector />
+          <TeraSelector />
         </div>
 
         <div className="divider">Moves</div>

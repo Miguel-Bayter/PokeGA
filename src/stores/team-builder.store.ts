@@ -47,6 +47,8 @@ export interface TeamBuilderActions {
     members: (TeamMemberSlot | null)[];
   }) => void;
   markClean: () => void;
+  applyImportedTeam: (pokemon: ImportedPokemonData[]) => void;
+  setMegaForSlot: (index: number, enabled: boolean) => void;
 }
 
 export interface TeamBuilderComputed {
@@ -54,6 +56,27 @@ export interface TeamBuilderComputed {
   spRemaining: () => number;
   isValidTeam: () => boolean;
   isSlotValid: (index: number) => boolean;
+  getMegaSlotIndex: () => number;
+}
+
+export interface ImportedPokemonData {
+  nickname?: string;
+  species: string;
+  item?: string;
+  ability: string;
+  teraType?: string;
+  level?: number;
+  isMega?: boolean;
+  statPoints: {
+    hp: number;
+    atk: number;
+    def: number;
+    spAtk: number;
+    spDef: number;
+    spd: number;
+  };
+  nature: string;
+  moves: string[];
 }
 
 const DEFAULT_STAT_POINTS: TeamMemberSlot['statPoints'] = {
@@ -141,6 +164,54 @@ export const useTeamBuilderStore = create<
     set({ isDirty: false });
   },
 
+  applyImportedTeam: (pokemon: ImportedPokemonData[]) => {
+    const members: (TeamMemberSlot | null)[] = [...EMPTY_MEMBERS];
+    for (let i = 0; i < Math.min(pokemon.length, 6); i++) {
+      const p = pokemon[i];
+      members[i] = {
+        pokemonId: 0,
+        pokemonName: p.species,
+        pokemonTypes: [],
+        itemId: null,
+        abilityName: p.ability,
+        nature: p.nature,
+        statPoints: { ...p.statPoints },
+        moves: [...p.moves],
+        isMega: p.isMega ?? false,
+        teraType: (p.teraType as PokemonType) ?? null,
+      };
+    }
+    const megaCount = members.filter((m) => m?.isMega).length;
+    if (megaCount > 1) {
+      let foundFirst = false;
+      for (let i = 0; i < members.length; i++) {
+        if (members[i]?.isMega) {
+          if (foundFirst) {
+            members[i] = { ...members[i]!, isMega: false };
+          }
+          foundFirst = true;
+        }
+      }
+    }
+    set({ members, isDirty: true });
+  },
+
+  setMegaForSlot: (index: number, enabled: boolean) => {
+    if (index < 0 || index > 5) return;
+    const members = [...get().members];
+    if (enabled) {
+      for (let i = 0; i < members.length; i++) {
+        if (members[i] && i !== index && members[i]!.isMega) {
+          members[i] = { ...members[i]!, isMega: false };
+        }
+      }
+    }
+    if (members[index]) {
+      members[index] = { ...members[index]!, isMega: enabled };
+    }
+    set({ members, isDirty: true });
+  },
+
   totalSPUsed: () => {
     const { members } = get();
     let total = 0;
@@ -174,6 +245,11 @@ export const useTeamBuilderStore = create<
     if (!member.nature) return false;
     if (member.moves.length === 0) return false;
     return true;
+  },
+
+  getMegaSlotIndex: () => {
+    const { members } = get();
+    return members.findIndex((m) => m?.isMega === true);
   },
 }));
 

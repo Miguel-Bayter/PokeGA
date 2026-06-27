@@ -6,6 +6,8 @@ import { PokemonPicker } from '@/components/features/builder/pokemon-picker';
 import { SetEditor } from '@/components/features/builder/set-editor';
 import { SPAllocator } from '@/components/features/builder/sp-allocator';
 import { TeamSlot } from '@/components/features/builder/team-slot';
+import { TeamValidation } from '@/components/features/builder/team-validation';
+import { ShowdownExportImport } from '@/components/features/builder/showdown-export-import';
 import { createTeamAction } from '@/server/actions/team.actions';
 
 const AUTO_SAVE_INTERVAL = 30000;
@@ -127,6 +129,8 @@ export default function TeamBuilderPage() {
           </div>
         )}
 
+        <TeamValidation />
+
         <div className="card bg-base-100 shadow-md">
           <div className="card-body">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -176,6 +180,14 @@ export default function TeamBuilderPage() {
         <PokemonPicker />
         <SetEditor />
         <SPAllocator />
+
+        <div className="collapse collapse-arrow bg-base-100 shadow-md">
+          <input type="checkbox" aria-label="Toggle Showdown Export/Import" />
+          <div className="collapse-title text-lg font-semibold">Showdown Export / Import</div>
+          <div className="collapse-content">
+            <ShowdownExportImport />
+          </div>
+        </div>
       </div>
     </div>
   );
