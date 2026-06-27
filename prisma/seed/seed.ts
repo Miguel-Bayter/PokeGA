@@ -6,10 +6,12 @@
  */
 
 import { PrismaClient } from '@prisma/client';
+import { PrismaLibSql } from '@prisma/adapter-libsql';
 import { fetchPokemon, fetchMove, fetchItem, fetchAbility } from '../../src/lib/pokeapi';
 import { CHAMPIONS_ROSTER } from '../../src/data/champions-roster';
 
-const prisma = new PrismaClient();
+const adapter = new PrismaLibSql({ url: process.env.DATABASE_URL || 'file:./dev.db' });
+const prisma = new PrismaClient({ adapter });
 
 /**
  * Common competitive moves in Pokemon Champions
